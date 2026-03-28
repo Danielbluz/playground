@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prisma e Pirâmide - Visualizador 3D</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #0a0a1a;
+    color: #e0e0e0;
+    overflow: hidden;
+    height: 100vh;
+  }
+  #controls {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    background: rgba(10, 10, 26, 0.92);
+    backdrop-filter: blur(12px);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    flex-wrap: wrap;
+  }
+  #controls h1 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+  }
+  .control-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .control-group label {
+    font-size: 14px;
+    color: #aaa;
+    white-space: nowrap;
+  }
+  #sidesRange {
+    -webkit-appearance: none;
+    width: 220px;
+    height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #4a9eff, #a855f7);
+    outline: none;
+    cursor: pointer;
+  }
+  #sidesRange::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 8px rgba(74, 158, 255, 0.6);
+    cursor: grab;
+  }
+  #sidesRange::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 8px rgba(74, 158, 255, 0.6);
+    cursor: grab;
+    border: none;
+  }
+  #sidesValue {
+    font-size: 28px;
+    font-weight: 700;
+    color: #4a9eff;
+    min-width: 40px;
+    text-align: center;
+  }
+  .shape-name {
+    font-size: 13px;
+    color: #888;
+    background: rgba(255,255,255,0.05);
+    padding: 4px 10px;
+    border-radius: 4px;
+  }
+  #canvasContainer {
+    width: 100%;
+    height: 100vh;
+  }
+  canvas { display: block; }
+  #labels {
+    position: fixed;
+    bottom: 40px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 80px;
+    z-index: 10;
+    pointer-events: none;
+  }
+  .label-box {
+    text-align: center;
+    background: rgba(10, 10, 26, 0.85);
+    backdrop-filter: blur(8px);
+    padding: 10px 24px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .label-box .title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+  }
+  .label-box .subtitle {
+    font-size: 12px;
+    color: #888;
+    margin-top: 2px;
+  }
+  #info {
+    position: fixed;
+    bottom: 8px;
+    right: 16px;
+    font-size: 11px;
+    color: #555;
+    z-index: 10;
+  }
+</style>
+</head>
+<body>
+
+<div id="controls">
+  <h1>Prisma & Pirâmide</h1>
+  <div class="control-group">
+    <label>Lados da base:</label>
+    <input type="range" id="sidesRange" min="3" max="50" value="3">
+    <span id="sidesValue">3</span>
+  </div>
+  <span class="shape-name" id="shapeName">Triangular</span>
+</div>
+
+<div id="canvasContainer"></div>
+
+<div id="labels">
+  <div class="label-box">
+    <div class="title" id="prismLabel">Prisma Triangular</div>
+    <div class="subtitle" id="prismSub">3 lados | 6 vértices | 9 arestas</div>
+  </div>
+  <div class="label-box">
+    <div class="title" id="pyramidLabel">Pirâmide Triangular</div>
+    <div class="subtitle" id="pyramidSub">3 lados | 4 vértices | 6 arestas</div>
+  </div>
+</div>
+
+<div id="info">Arraste para rotacionar | Scroll para zoom</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const container = document.getElementById('canvasContainer');
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.set(0, 3.5, 8);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setClearColor(0x0a0a1a);
+container.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 3;
+controls.maxDistance = 20;
+
+// Lighting
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+scene.add(ambientLight);
+
+const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
+dirLight1.position.set(5, 8, 5);
+scene.add(dirLight1);
+
+const dirLight2 = new THREE.DirectionalLight(0x4a9eff, 0.3);
+dirLight2.position.set(-5, 3, -3);
+scene.add(dirLight2);
+
+// Grid
+const gridHelper = new THREE.GridHelper(12, 24, 0x222244, 0x111133);
+gridHelper.position.y = -1.5;
+scene.add(gridHelper);
+
+// Groups
+const prismGroup = new THREE.Group();
+const pyramidGroup = new THREE.Group();
+prismGroup.position.x = -2.2;
+pyramidGroup.position.x = 2.2;
+scene.add(prismGroup);
+scene.add(pyramidGroup);
+
+const PRISM_COLOR = 0x4a9eff;
+const PYRAMID_COLOR = 0xa855f7;
+const EDGE_COLOR_PRISM = 0x8fc4ff;
+const EDGE_COLOR_PYRAMID = 0xd4a0ff;
+
+function getPolygonName(n) {
+  const names = {
+    3: 'Triangular', 4: 'Quadrangular', 5: 'Pentagonal',
+    6: 'Hexagonal', 7: 'Heptagonal', 8: 'Octogonal',
+    9: 'Eneagonal', 10: 'Decagonal', 11: 'Hendecagonal',
+    12: 'Dodecagonal', 20: 'Icosagonal'
+  };
+  return names[n] || `${n}-gonal`;
+}
+
+function createBaseVertices(n, radius, y) {
+  const verts = [];
+  for (let i = 0; i < n; i++) {
+    const angle = (i / n) * Math.PI * 2 - Math.PI / 2;
+    verts.push(new THREE.Vector3(
+      Math.cos(angle) * radius,
+      y,
+      Math.sin(angle) * radius
+    ));
+  }
+  return verts;
+}
+
+function buildPrism(n) {
+  while (prismGroup.children.length) {
+    const child = prismGroup.children[0];
+    prismGroup.remove(child);
+    if (child.geometry) child.geometry.dispose();
+    if (child.material) child.material.dispose();
+  }
+
+  const radius = 1.2;
+  const halfH = 1.0;
+  const bottomVerts = createBaseVertices(n, radius, -halfH);
+  const topVerts = createBaseVertices(n, radius, halfH);
+
+  // Solid mesh
+  const geometry = new THREE.BufferGeometry();
+  const positions = [];
+  const normals = [];
+
+  // Bottom face
+  for (let i = 1; i < n - 1; i++) {
+    positions.push(
+      bottomVerts[0].x, bottomVerts[0].y, bottomVerts[0].z,
+      bottomVerts[i + 1].x, bottomVerts[i + 1].y, bottomVerts[i + 1].z,
+      bottomVerts[i].x, bottomVerts[i].y, bottomVerts[i].z
+    );
+    normals.push(0, -1, 0, 0, -1, 0, 0, -1, 0);
+  }
+  // Top face
+  for (let i = 1; i < n - 1; i++) {
+    positions.push(
+      topVerts[0].x, topVerts[0].y, topVerts[0].z,
+      topVerts[i].x, topVerts[i].y, topVerts[i].z,
+      topVerts[i + 1].x, topVerts[i + 1].y, topVerts[i + 1].z
+    );
+    normals.push(0, 1, 0, 0, 1, 0, 0, 1, 0);
+  }
+  // Side faces
+  for (let i = 0; i < n; i++) {
+    const next = (i + 1) % n;
+    const b0 = bottomVerts[i], b1 = bottomVerts[next];
+    const t0 = topVerts[i], t1 = topVerts[next];
+
+    const edge = new THREE.Vector3().subVectors(b1, b0);
+    const up = new THREE.Vector3(0, 1, 0);
+    const normal = new THREE.Vector3().crossVectors(edge, up).normalize();
+
+    positions.push(
+      b0.x, b0.y, b0.z, b1.x, b1.y, b1.z, t0.x, t0.y, t0.z,
+      t0.x, t0.y, t0.z, b1.x, b1.y, b1.z, t1.x, t1.y, t1.z
+    );
+    for (let j = 0; j < 6; j++) normals.push(normal.x, normal.y, normal.z);
+  }
+
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+
+  const mesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({
+    color: PRISM_COLOR,
+    transparent: true,
+    opacity: 0.35,
+    side: THREE.DoubleSide,
+    depthWrite: false
+  }));
+  prismGroup.add(mesh);
+
+  // Edges
+  const edgePoints = [];
+  // Bottom edges
+  for (let i = 0; i < n; i++) {
+    edgePoints.push(bottomVerts[i], bottomVerts[(i + 1) % n]);
+  }
+  // Top edges
+  for (let i = 0; i < n; i++) {
+    edgePoints.push(topVerts[i], topVerts[(i + 1) % n]);
+  }
+  // Vertical edges
+  for (let i = 0; i < n; i++) {
+    edgePoints.push(bottomVerts[i], topVerts[i]);
+  }
+
+  const lineGeo = new THREE.BufferGeometry().setFromPoints(edgePoints);
+  const lineMat = new THREE.LineBasicMaterial({ color: EDGE_COLOR_PRISM, linewidth: 1 });
+  const lines = new THREE.LineSegments(lineGeo, lineMat);
+  prismGroup.add(lines);
+
+  // Vertex spheres
+  const sphereGeo = new THREE.SphereGeometry(0.04, 8, 8);
+  const sphereMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  [...bottomVerts, ...topVerts].forEach(v => {
+    const s = new THREE.Mesh(sphereGeo, sphereMat);
+    s.position.copy(v);
+    prismGroup.add(s);
+  });
+}
+
+function buildPyramid(n) {
+  while (pyramidGroup.children.length) {
+    const child = pyramidGroup.children[0];
+    pyramidGroup.remove(child);
+    if (child.geometry) child.geometry.dispose();
+    if (child.material) child.material.dispose();
+  }
+
+  const radius = 1.2;
+  const baseY = -1.0;
+  const apexY = 1.2;
+  const baseVerts = createBaseVertices(n, radius, baseY);
+  const apex = new THREE.Vector3(0, apexY, 0);
+
+  const geometry = new THREE.BufferGeometry();
+  const positions = [];
+  const normals = [];
+
+  // Base face
+  for (let i = 1; i < n - 1; i++) {
+    positions.push(
+      baseVerts[0].x, baseVerts[0].y, baseVerts[0].z,
+      baseVerts[i + 1].x, baseVerts[i + 1].y, baseVerts[i + 1].z,
+      baseVerts[i].x, baseVerts[i].y, baseVerts[i].z
+    );
+    normals.push(0, -1, 0, 0, -1, 0, 0, -1, 0);
+  }
+  // Side faces
+  for (let i = 0; i < n; i++) {
+    const next = (i + 1) % n;
+    const b0 = baseVerts[i], b1 = baseVerts[next];
+
+    const v1 = new THREE.Vector3().subVectors(b1, b0);
+    const v2 = new THREE.Vector3().subVectors(apex, b0);
+    const normal = new THREE.Vector3().crossVectors(v1, v2).normalize();
+
+    positions.push(
+      b0.x, b0.y, b0.z, b1.x, b1.y, b1.z, apex.x, apex.y, apex.z
+    );
+    normals.push(normal.x, normal.y, normal.z, normal.x, normal.y, normal.z, normal.x, normal.y, normal.z);
+  }
+
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+
+  const mesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({
+    color: PYRAMID_COLOR,
+    transparent: true,
+    opacity: 0.35,
+    side: THREE.DoubleSide,
+    depthWrite: false
+  }));
+  pyramidGroup.add(mesh);
+
+  // Edges
+  const edgePoints = [];
+  for (let i = 0; i < n; i++) {
+    edgePoints.push(baseVerts[i], baseVerts[(i + 1) % n]);
+    edgePoints.push(baseVerts[i], apex);
+  }
+
+  const lineGeo = new THREE.BufferGeometry().setFromPoints(edgePoints);
+  const lineMat = new THREE.LineBasicMaterial({ color: EDGE_COLOR_PYRAMID, linewidth: 1 });
+  const lines = new THREE.LineSegments(lineGeo, lineMat);
+  pyramidGroup.add(lines);
+
+  // Vertex spheres
+  const sphereGeo = new THREE.SphereGeometry(0.04, 8, 8);
+  const sphereMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  [...baseVerts, apex].forEach(v => {
+    const s = new THREE.Mesh(sphereGeo, sphereMat);
+    s.position.copy(v);
+    pyramidGroup.add(s);
+  });
+}
+
+function updateShapes(n) {
+  buildPrism(n);
+  buildPyramid(n);
+
+  const name = getPolygonName(n);
+  document.getElementById('sidesValue').textContent = n;
+  document.getElementById('shapeName').textContent = name;
+
+  // Prism: 2n vertices, 3n edges, n+2 faces
+  document.getElementById('prismLabel').textContent = `Prisma ${name}`;
+  document.getElementById('prismSub').textContent = `${n} lados | ${2 * n} vértices | ${3 * n} arestas`;
+
+  // Pyramid: n+1 vertices, 2n edges, n+1 faces
+  document.getElementById('pyramidLabel').textContent = `Pirâmide ${name}`;
+  document.getElementById('pyramidSub').textContent = `${n} lados | ${n + 1} vértices | ${2 * n} arestas`;
+}
+
+// Slider
+const slider = document.getElementById('sidesRange');
+slider.addEventListener('input', () => updateShapes(parseInt(slider.value)));
+
+// Initial build
+updateShapes(3);
+
+// Auto-rotate
+let autoRotate = true;
+controls.addEventListener('start', () => autoRotate = false);
+controls.addEventListener('end', () => setTimeout(() => autoRotate = true, 3000));
+
+function animate() {
+  requestAnimationFrame(animate);
+  if (autoRotate) {
+    prismGroup.rotation.y += 0.004;
+    pyramidGroup.rotation.y += 0.004;
+  }
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>

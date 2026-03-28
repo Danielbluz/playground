@@ -78,6 +78,33 @@
     min-width: 40px;
     text-align: center;
   }
+  #btnPlus {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(74, 158, 255, 0.15);
+    color: #4a9eff;
+    font-size: 20px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    line-height: 1;
+  }
+  #btnPlus:hover {
+    background: rgba(74, 158, 255, 0.35);
+    border-color: #4a9eff;
+  }
+  #btnPlus:active {
+    transform: scale(0.9);
+  }
+  #btnPlus:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
   .shape-name {
     font-size: 13px;
     color: #888;
@@ -137,6 +164,7 @@
     <label>Lados da base:</label>
     <input type="range" id="sidesRange" min="3" max="50" value="3">
     <span id="sidesValue">3</span>
+    <button id="btnPlus" title="Aumentar lados">+</button>
   </div>
   <span class="shape-name" id="shapeName">Triangular</span>
 </div>
@@ -427,9 +455,24 @@ function updateShapes(n) {
   document.getElementById('pyramidSub').textContent = `${n} lados | ${n + 1} vértices | ${2 * n} arestas`;
 }
 
-// Slider
+// Controls
 const slider = document.getElementById('sidesRange');
-slider.addEventListener('input', () => updateShapes(parseInt(slider.value)));
+const btnPlus = document.getElementById('btnPlus');
+
+slider.addEventListener('input', () => {
+  const n = parseInt(slider.value);
+  updateShapes(n);
+  btnPlus.disabled = n >= 50;
+});
+
+btnPlus.addEventListener('click', () => {
+  const current = parseInt(slider.value);
+  if (current < 50) {
+    slider.value = current + 1;
+    updateShapes(current + 1);
+    btnPlus.disabled = current + 1 >= 50;
+  }
+});
 
 // Initial build
 updateShapes(3);

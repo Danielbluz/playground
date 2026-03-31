@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saldo de Créditos GD | ForGreen</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #0f1117;
+  --card: #1a1d27;
+  --border: #2a2d3a;
+  --text: #e4e4e7;
+  --text-dim: #8b8d98;
+  --accent: #3b82f6;
+  --green: #22c55e;
+  --yellow: #eab308;
+  --red: #ef4444;
+  --orange: #f97316;
+  --purple: #a855f7;
+  --cyan: #06b6d4;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: 'Inter', -apple-system, system-ui, sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+.header {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 1.5rem 2rem;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+}
+.header h1 { font-size: 1.4rem; font-weight: 700; }
+.header h1 span { color: var(--accent); }
+.header .meta { color: var(--text-dim); font-size: 0.85rem; }
+
+.container { max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
+
+/* KPI Cards */
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.kpi {
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+  padding: 1.2rem; text-align: center; position: relative; overflow: hidden;
+}
+.kpi::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+}
+.kpi.total::before { background: var(--accent); }
+.kpi.critico::before { background: var(--red); }
+.kpi.atencao::before { background: var(--orange); }
+.kpi.ok::before { background: var(--green); }
+.kpi.excesso::before { background: var(--purple); }
+.kpi.novo::before { background: var(--text-dim); }
+.kpi.saldo::before { background: var(--cyan); }
+
+.kpi-value { font-size: 2rem; font-weight: 800; margin: 0.3rem 0; }
+.kpi.critico .kpi-value { color: var(--red); }
+.kpi.atencao .kpi-value { color: var(--orange); }
+.kpi.ok .kpi-value { color: var(--green); }
+.kpi.excesso .kpi-value { color: var(--purple); }
+.kpi.novo .kpi-value { color: var(--text-dim); }
+.kpi.saldo .kpi-value { color: var(--cyan); }
+
+.kpi-label { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; }
+.kpi-sub { font-size: 0.7rem; color: var(--text-dim); margin-top: 0.2rem; }
+
+/* Charts row */
+.charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+@media (max-width: 900px) { .charts-row { grid-template-columns: 1fr; } }
+
+.chart-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem;
+}
+.chart-card h3 { font-size: 0.9rem; color: var(--text-dim); margin-bottom: 1rem; font-weight: 500; }
+
+/* Filters */
+.filters {
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+  padding: 1rem 1.2rem; margin-bottom: 1rem;
+  display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;
+}
+.filters label { font-size: 0.8rem; color: var(--text-dim); }
+.filters select, .filters input {
+  background: var(--bg); border: 1px solid var(--border); color: var(--text);
+  padding: 0.4rem 0.6rem; border-radius: 6px; font-size: 0.85rem;
+}
+.filters input { width: 200px; }
+
+/* Table */
+.table-wrap {
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+  overflow: hidden;
+}
+.table-info { padding: 0.8rem 1.2rem; border-bottom: 1px solid var(--border); font-size: 0.8rem; color: var(--text-dim); }
+table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+thead { background: #1e2130; position: sticky; top: 0; z-index: 2; }
+th {
+  padding: 0.7rem 0.8rem; text-align: left; font-weight: 600; color: var(--text-dim);
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em;
+  cursor: pointer; user-select: none; white-space: nowrap; border-bottom: 1px solid var(--border);
+}
+th:hover { color: var(--text); }
+th.sorted-asc::after { content: ' \u25B2'; color: var(--accent); }
+th.sorted-desc::after { content: ' \u25BC'; color: var(--accent); }
+td { padding: 0.6rem 0.8rem; border-bottom: 1px solid #1e2130; white-space: nowrap; }
+tr:hover { background: rgba(59,130,246,0.06); }
+
+.badge {
+  display: inline-block; padding: 0.15rem 0.5rem; border-radius: 10px;
+  font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
+}
+.badge.critico { background: rgba(239,68,68,0.15); color: var(--red); }
+.badge.atencao { background: rgba(249,115,22,0.15); color: var(--orange); }
+.badge.ok { background: rgba(34,197,94,0.15); color: var(--green); }
+.badge.excesso { background: rgba(168,85,247,0.15); color: var(--purple); }
+.badge.novo { background: rgba(139,141,152,0.1); color: var(--text-dim); }
+
+.sparkline { display: inline-block; vertical-align: middle; }
+.num-r { text-align: right; font-variant-numeric: tabular-nums; }
+
+.scroll-table { max-height: 65vh; overflow-y: auto; }
+.scroll-table::-webkit-scrollbar { width: 6px; }
+.scroll-table::-webkit-scrollbar-track { background: var(--card); }
+.scroll-table::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+.footer { text-align: center; padding: 2rem; color: var(--text-dim); font-size: 0.75rem; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1><span>ForGreen</span> | Saldo de Cr&eacute;ditos GD</h1>
+    <div class="meta">An&aacute;lise de saldo acumulado vs consumo m&eacute;dio por UC (Posto FORAP)</div>
+  </div>
+  <div class="meta" id="dataBase"></div>
+</div>
+
+<div class="container">
+  <div class="kpis" id="kpis"></div>
+
+  <div class="charts-row">
+    <div class="chart-card">
+      <h3>Distribui&ccedil;&atilde;o por Status</h3>
+      <canvas id="chartStatus" height="260"></canvas>
+    </div>
+    <div class="chart-card">
+      <h3>Saldo Acumulado por Usina (MWh)</h3>
+      <canvas id="chartUsina" height="260"></canvas>
+    </div>
+  </div>
+
+  <div class="charts-row">
+    <div class="chart-card">
+      <h3>Status por Usina</h3>
+      <canvas id="chartUsinaStatus" height="280"></canvas>
+    </div>
+    <div class="chart-card">
+      <h3>Top 15 UCs por Saldo (MWh FORAP)</h3>
+      <canvas id="chartTopUCs" height="280"></canvas>
+    </div>
+  </div>
+
+  <div class="filters">
+    <div>
+      <label>Usina</label><br>
+      <select id="filtroUsina"><option value="">Todas</option></select>
+    </div>
+    <div>
+      <label>Status</label><br>
+      <select id="filtroStatus">
+        <option value="">Todos</option>
+        <option value="critico">Cr&iacute;tico (&lt;2m)</option>
+        <option value="atencao">Aten&ccedil;&atilde;o (2-6m)</option>
+        <option value="ok">OK (6-24m)</option>
+        <option value="excesso">Excesso (&gt;24m)</option>
+        <option value="novo">Novo (sem dados)</option>
+      </select>
+    </div>
+    <div>
+      <label>Buscar cliente</label><br>
+      <input type="text" id="filtroBusca" placeholder="Nome ou UC...">
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <div class="table-info" id="tableInfo"></div>
+    <div class="scroll-table">
+      <table>
+        <thead>
+          <tr>
+            <th data-col="uc">UC</th>
+            <th data-col="cliente">Cliente</th>
+            <th data-col="usina">Usina</th>
+            <th data-col="status">Status</th>
+            <th data-col="forap_saldo" class="num-r">Saldo (kWh)</th>
+            <th data-col="forap_consumo_med" class="num-r">Consumo M&eacute;d.</th>
+            <th data-col="forap_meses" class="num-r">Meses Saldo</th>
+            <th data-col="ponta_saldo" class="num-r">Saldo Ponta</th>
+            <th>Tend&ecirc;ncia</th>
+            <th data-col="ultimo_periodo">Ult. Per&iacute;odo</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  ForGreen Energia Solar &mdash; Dashboard gerado em 31/03/2026 via Claude Code
+</div>
+
+<script>
+// Data will be loaded from external file or inline
+let DATA = null;
+
+async function loadData() {
+  try {
+    const resp = await fetch('saldo_data.json');
+    DATA = await resp.json();
+  } catch(e) {
+    console.error('Falha ao carregar dados:', e);
+    document.body.innerHTML = '<p style="color:red;padding:2rem">Erro ao carregar saldo_data.json</p>';
+    return;
+  }
+  init();
+}
+
+function fmt(n) { return n.toLocaleString('pt-BR', {maximumFractionDigits:0}); }
+function fmtD(n, d) { return n.toLocaleString('pt-BR', {minimumFractionDigits:d, maximumFractionDigits:d}); }
+
+const STATUS_LABELS = {critico:'Cr\u00edtico',atencao:'Aten\u00e7\u00e3o',ok:'OK',excesso:'Excesso',novo:'Novo'};
+const STATUS_COLORS = {critico:'#ef4444',atencao:'#f97316',ok:'#22c55e',excesso:'#a855f7',novo:'#4b5563'};
+
+let sortCol = 'forap_meses', sortDir = 'desc';
+let filtered = [];
+
+function init() {
+  const s = DATA.stats;
+  document.getElementById('dataBase').textContent = 'Base: ' + s.data_base.split('-').reverse().join('/');
+
+  // KPIs
+  const kpisEl = document.getElementById('kpis');
+  kpisEl.innerHTML = `
+    <div class="kpi total"><div class="kpi-label">Total UCs</div><div class="kpi-value">${s.total_ucs}</div><div class="kpi-sub">${s.com_saldo} com saldo</div></div>
+    <div class="kpi saldo"><div class="kpi-label">Saldo Total</div><div class="kpi-value">${fmtD(s.saldo_total_kwh/1000,0)}</div><div class="kpi-sub">MWh acumulados</div></div>
+    <div class="kpi critico"><div class="kpi-label">Cr\u00edtico &lt;2m</div><div class="kpi-value">${s.critico}</div><div class="kpi-sub">UCs em risco</div></div>
+    <div class="kpi atencao"><div class="kpi-label">Aten\u00e7\u00e3o 2-6m</div><div class="kpi-value">${s.atencao}</div><div class="kpi-sub">monitorar</div></div>
+    <div class="kpi ok"><div class="kpi-label">OK 6-24m</div><div class="kpi-value">${s.ok}</div><div class="kpi-sub">saud\u00e1vel</div></div>
+    <div class="kpi excesso"><div class="kpi-label">Excesso &gt;24m</div><div class="kpi-value">${s.excesso}</div><div class="kpi-sub">sobre-alocado</div></div>
+    <div class="kpi novo"><div class="kpi-label">Novos</div><div class="kpi-value">${s.novo}</div><div class="kpi-sub">sem dados ainda</div></div>
+  `;
+
+  // Usina filter
+  const usinas = [...new Set(DATA.data.map(d=>d.usina))].filter(Boolean).sort();
+  const sel = document.getElementById('filtroUsina');
+  usinas.forEach(u => { const o = document.createElement('option'); o.value=u; o.textContent=u; sel.appendChild(o); });
+
+  buildCharts();
+  applyFilters();
+
+  // Events
+  document.getElementById('filtroUsina').addEventListener('change', applyFilters);
+  document.getElementById('filtroStatus').addEventListener('change', applyFilters);
+  document.getElementById('filtroBusca').addEventListener('input', applyFilters);
+
+  document.querySelectorAll('th[data-col]').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.col;
+      if (sortCol === col) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+      else { sortCol = col; sortDir = 'desc'; }
+      renderTable();
+    });
+  });
+}
+
+function buildCharts() {
+  Chart.defaults.color = '#8b8d98';
+  Chart.defaults.borderColor = '#2a2d3a';
+
+  // Donut - Status (excluindo novos)
+  const activeData = DATA.data.filter(d => d.status !== 'novo');
+  const statusCounts = {};
+  activeData.forEach(d => { statusCounts[d.status] = (statusCounts[d.status]||0)+1; });
+  const statusKeys = ['critico','atencao','ok','excesso'];
+
+  new Chart(document.getElementById('chartStatus'), {
+    type: 'doughnut',
+    data: {
+      labels: statusKeys.map(k => STATUS_LABELS[k]),
+      datasets: [{
+        data: statusKeys.map(k => statusCounts[k]||0),
+        backgroundColor: statusKeys.map(k => STATUS_COLORS[k]),
+        borderWidth: 0, hoverOffset: 8
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      cutout: '55%',
+      plugins: {
+        legend: { position: 'bottom', labels: { padding: 16, usePointStyle: true, pointStyleWidth: 10 } },
+        tooltip: { callbacks: { label: ctx => `${ctx.label}: ${ctx.raw} UCs (${(ctx.raw/activeData.length*100).toFixed(0)}%)` } }
+      }
+    }
+  });
+
+  // Bar - Saldo por Usina
+  const usinaMap = {};
+  DATA.data.forEach(d => {
+    if (!d.usina) return;
+    if (!usinaMap[d.usina]) usinaMap[d.usina] = {saldo:0, count:0};
+    usinaMap[d.usina].saldo += d.forap_saldo;
+    usinaMap[d.usina].count++;
+  });
+  const usinasSorted = Object.entries(usinaMap).sort((a,b) => b[1].saldo - a[1].saldo);
+
+  new Chart(document.getElementById('chartUsina'), {
+    type: 'bar',
+    data: {
+      labels: usinasSorted.map(([u]) => u),
+      datasets: [{
+        data: usinasSorted.map(([,v]) => +(v.saldo/1000).toFixed(1)),
+        backgroundColor: '#3b82f6', borderRadius: 4, barPercentage: 0.7
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `${fmtD(ctx.raw,1)} MWh (${usinaMap[ctx.label].count} UCs)` } } },
+      scales: { x: { grid: { display: false }, ticks: { callback: v => v + ' MWh' } }, y: { grid: { display: false } } }
+    }
+  });
+
+  // Stacked bar - Status por Usina
+  const usinaStatus = {};
+  DATA.data.forEach(d => {
+    if (!d.usina) return;
+    if (!usinaStatus[d.usina]) usinaStatus[d.usina] = {critico:0,atencao:0,ok:0,excesso:0,novo:0};
+    usinaStatus[d.usina][d.status]++;
+  });
+  const usinaNames = Object.keys(usinaStatus).sort();
+
+  new Chart(document.getElementById('chartUsinaStatus'), {
+    type: 'bar',
+    data: {
+      labels: usinaNames,
+      datasets: statusKeys.concat(['novo']).map(st => ({
+        label: STATUS_LABELS[st] || 'Novo',
+        data: usinaNames.map(u => usinaStatus[u][st] || 0),
+        backgroundColor: STATUS_COLORS[st], borderRadius: 2
+      }))
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: { x: { stacked: true, grid:{display:false}, ticks:{maxRotation:45} }, y: { stacked: true, grid:{color:'#1e2130'} } },
+      plugins: { legend: { position:'bottom', labels:{usePointStyle:true, pointStyleWidth:10, padding:12} } }
+    }
+  });
+
+  // Top 15 UCs by saldo
+  const top15 = [...DATA.data].filter(d=>d.forap_saldo>0).sort((a,b)=>b.forap_saldo-a.forap_saldo).slice(0,15);
+  new Chart(document.getElementById('chartTopUCs'), {
+    type: 'bar',
+    data: {
+      labels: top15.map(d => d.cliente.substring(0,20) || d.uc),
+      datasets: [{
+        data: top15.map(d => +(d.forap_saldo/1000).toFixed(1)),
+        backgroundColor: top15.map(d => STATUS_COLORS[d.status] || '#3b82f6'),
+        borderRadius: 4, barPercentage: 0.7
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `${fmtD(ctx.raw,1)} MWh | ${top15[ctx.dataIndex].forap_meses} meses` } } },
+      scales: { x: { grid:{display:false}, ticks:{callback: v=>v+' MWh'} }, y: { grid:{display:false} } }
+    }
+  });
+}
+
+function applyFilters() {
+  const usina = document.getElementById('filtroUsina').value;
+  const status = document.getElementById('filtroStatus').value;
+  const busca = document.getElementById('filtroBusca').value.toLowerCase();
+
+  filtered = DATA.data.filter(d => {
+    if (usina && d.usina !== usina) return false;
+    if (status && d.status !== status) return false;
+    if (busca && !d.cliente.toLowerCase().includes(busca) && !d.uc.includes(busca)) return false;
+    return true;
+  });
+
+  renderTable();
+}
+
+function sparklineSVG(historico) {
+  if (!historico || historico.length < 2) return '';
+  const vals = historico.map(h => h.saldo);
+  const max = Math.max(...vals, 1);
+  const w = 80, h = 24;
+  const points = vals.map((v, i) => `${(i/(vals.length-1))*w},${h - (v/max)*h}`).join(' ');
+  const lastVal = vals[vals.length-1];
+  const prevVal = vals[vals.length-2];
+  const color = lastVal >= prevVal ? '#22c55e' : '#ef4444';
+  return `<svg class="sparkline" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><polyline points="${points}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
+}
+
+function renderTable() {
+  const numCols = ['forap_saldo','forap_consumo_med','forap_meses','ponta_saldo','ponta_meses'];
+  const sorted = [...filtered].sort((a,b) => {
+    let va = a[sortCol], vb = b[sortCol];
+    if (va == null) va = '';
+    if (vb == null) vb = '';
+    if (numCols.includes(sortCol)) { va = +va; vb = +vb; }
+    if (va < vb) return sortDir === 'asc' ? -1 : 1;
+    if (va > vb) return sortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  document.querySelectorAll('th[data-col]').forEach(th => {
+    th.classList.remove('sorted-asc','sorted-desc');
+    if (th.dataset.col === sortCol) th.classList.add('sorted-' + sortDir);
+  });
+
+  const saldoFiltrado = sorted.reduce((s,d) => s + d.forap_saldo, 0);
+  document.getElementById('tableInfo').textContent = `${sorted.length} UCs | Saldo filtrado: ${fmtD(saldoFiltrado/1000,1)} MWh`;
+
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = sorted.map(d => `<tr>
+    <td>${d.uc}</td>
+    <td>${d.cliente}</td>
+    <td>${d.usina}</td>
+    <td><span class="badge ${d.status}">${STATUS_LABELS[d.status]||d.status}</span></td>
+    <td class="num-r">${fmt(d.forap_saldo)}</td>
+    <td class="num-r">${fmt(d.forap_consumo_med)}</td>
+    <td class="num-r" style="font-weight:700;color:${STATUS_COLORS[d.status]||'inherit'}">${d.forap_meses >= 999 ? '\u221E' : fmtD(d.forap_meses,1)}</td>
+    <td class="num-r">${fmt(d.ponta_saldo)}</td>
+    <td>${sparklineSVG(d.historico)}</td>
+    <td>${d.ultimo_periodo ? d.ultimo_periodo.substring(0,7) : '-'}</td>
+  </tr>`).join('');
+}
+
+loadData();
+</script>
+</body>
+</html>

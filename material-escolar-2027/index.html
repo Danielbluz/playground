@@ -1,0 +1,657 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}*,*::before,*::after{box-sizing:border-box}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Material Escolar 2027</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap">
+<style>
+/* Layout: uma coluna de caderno pautado — margem vermelha à esquerda separa a caixinha de marcar do item; abas por série fixas no topo */
+:root{
+  --paper:#F6F8FC; --surface:#FFFFFF; --ink:#172036; --ink-2:#56617D; --rule:#DDE4F1; --margin:#E05A5E;
+  --blue:#2346C4; --blue-soft:#E7ECFB; --pencil:#F2B705; --pencil-ink:#3B2C00; --pencil-soft:#FFF3C7;
+  --ok:#1D8250; --ok-ink:#FFFFFF; --ok-soft:#E2F3E9; --muted-bg:#EEF1F7; --warn:#8A4B00; --warn-soft:#FDEBD3;
+  --f-display:'Bricolage Grotesque', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --f-body:'Atkinson Hyperlegible', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0E1320; --surface:#151B2C; --ink:#E6EAF4; --ink-2:#9BA6C2; --rule:#26304B; --margin:#B4545A;
+    --blue:#93ABFF; --blue-soft:#1C2649; --pencil:#F4C542; --pencil-ink:#2A2000; --pencil-soft:#352C12;
+    --ok:#58C68B; --ok-ink:#0B1A12; --ok-soft:#14301F; --muted-bg:#1B2236; --warn:#F0B062; --warn-soft:#3A2A14;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0E1320; --surface:#151B2C; --ink:#E6EAF4; --ink-2:#9BA6C2; --rule:#26304B; --margin:#B4545A;
+  --blue:#93ABFF; --blue-soft:#1C2649; --pencil:#F4C542; --pencil-ink:#2A2000; --pencil-soft:#352C12;
+  --ok:#58C68B; --ok-ink:#0B1A12; --ok-soft:#14301F; --muted-bg:#1B2236; --warn:#F0B062; --warn-soft:#3A2A14;
+  color-scheme:dark;
+}
+html,body{background:var(--paper)}
+body{color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.45}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--paper)}
+a{color:var(--blue)}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+
+.pagina{max-width:880px;margin:0 auto;padding-block:24px 56px;
+  padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:18px}
+
+.topo{display:flex;flex-direction:column;gap:6px}
+.eyebrow{margin:0;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+h1{margin:0;font-family:var(--f-display);font-weight:800;font-size:clamp(1.9rem,5vw,2.6rem);line-height:1.05;letter-spacing:-.01em;text-wrap:balance}
+h1 .ano{color:var(--blue)}
+.sync{margin:4px 0 0;display:inline-flex;align-items:center;gap:8px;font-size:.88rem;color:var(--ink-2)}
+.sync .dot{width:9px;height:9px;border-radius:50%;background:var(--ink-2);flex:none}
+.sync[data-modo="db"] .dot{background:var(--ok)}
+.sync[data-modo="local"] .dot{background:var(--pencil)}
+.aviso{margin:0;padding:10px 12px;border-radius:var(--r);background:var(--warn-soft);color:var(--warn);font-size:.9rem}
+
+.resumo{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.card{background:var(--surface);border:1px solid var(--rule);border-radius:var(--r);padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.card .rot{font-size:.8rem;color:var(--ink-2);letter-spacing:.03em}
+.card .num{font-family:var(--f-display);font-weight:800;font-size:1.6rem;line-height:1;font-variant-numeric:tabular-nums}
+.card .num small{font-size:.95rem;font-weight:600;color:var(--ink-2)}
+.barra{height:8px;border-radius:99px;background:var(--muted-bg);overflow:hidden}
+.barra i{display:block;height:100%;background:var(--pencil);border-radius:99px;transition:width .3s}
+.card .gasto{font-size:.85rem;color:var(--ink-2);font-variant-numeric:tabular-nums}
+@media (max-width:520px){.resumo{grid-template-columns:1fr 1fr}.resumo .card:last-child{grid-column:1 / -1}}
+
+.abas-wrap{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);padding-block:8px;margin-block:-8px}
+.abas{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:4px;background:var(--muted-bg);border-radius:12px}
+.abas button{border:0;background:transparent;border-radius:9px;padding:9px 6px;cursor:pointer;font-weight:700;font-size:.95rem;color:var(--ink-2);display:flex;flex-direction:column;align-items:center;gap:1px;min-width:0}
+.abas button .n{font-weight:400;font-size:.75rem;font-variant-numeric:tabular-nums}
+.abas button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+
+.filtros{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{border:1px solid var(--rule);background:var(--surface);border-radius:99px;padding:6px 12px;cursor:pointer;font-size:.88rem}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.busca{flex:1 1 180px;min-width:0;border:1px solid var(--rule);background:var(--surface);border-radius:99px;padding:6px 14px;font-size:.92rem}
+.dica{margin:0;font-size:.84rem;color:var(--ink-2);max-width:68ch}
+
+.turno-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:.9rem;color:var(--ink-2)}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:99px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:transparent;padding:5px 12px;cursor:pointer;font-size:.88rem}
+.seg button+button{border-left:1px solid var(--rule)}
+.seg button[aria-pressed="true"]{background:var(--blue);color:var(--surface)}
+
+.grupo{display:flex;flex-direction:column;gap:8px}
+.grupo h2{margin:6px 0 0;font-family:var(--f-display);font-weight:600;font-size:1.15rem;display:flex;align-items:baseline;gap:10px;text-wrap:balance}
+.grupo h2 .cnt{font-family:var(--f-body);font-weight:400;font-size:.82rem;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.grupo .nota{margin:-4px 0 0;font-size:.84rem;color:var(--ink-2)}
+
+.itens{list-style:none;margin:0;padding:0;background:var(--surface);border:1px solid var(--rule);border-radius:var(--r);position:relative;overflow:hidden}
+.itens::before{content:"";position:absolute;top:0;bottom:0;left:52px;width:1.5px;background:var(--margin);opacity:.5;pointer-events:none}
+.item{display:grid;grid-template-columns:52px minmax(0,1fr);border-bottom:1px solid var(--rule)}
+.item:last-child{border-bottom:0}
+.col-chk{display:flex;justify-content:center;padding-top:12px}
+.chk{width:30px;height:30px;border-radius:8px;border:2px solid var(--ink-2);background:var(--surface);display:grid;place-items:center;cursor:pointer;padding:0;color:transparent}
+.chk svg{width:20px;height:20px}
+.chk:disabled{cursor:default;opacity:.5}
+.item[data-st="comprado"] .chk{background:var(--ok);border-color:var(--ok);color:var(--ok-ink)}
+.item[data-st="temos"] .chk{background:var(--blue-soft);border-color:var(--blue);color:var(--blue)}
+.item[data-st="naoprecisa"] .chk{border-style:dashed;color:var(--ink-2)}
+.corpo{padding:11px 14px 12px 14px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.l1{display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
+.nome{font-weight:700;line-height:1.3;min-width:0;overflow-wrap:anywhere}
+.qt{flex:none;font-size:.8rem;font-variant-numeric:tabular-nums;background:var(--pencil-soft);color:var(--pencil-ink);border-radius:6px;padding:2px 8px;white-space:nowrap}
+.item[data-st="comprado"] .nome,.item[data-st="temos"] .nome{color:var(--ink-2)}
+.item[data-st="naoprecisa"] .nome{color:var(--ink-2);text-decoration:line-through}
+.item[data-st="naoprecisa"] .corpo>*:not(.l1):not(.controle){opacity:.6}
+.det{margin:0;font-size:.88rem;color:var(--ink-2);max-width:70ch}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-size:.75rem;border-radius:99px;padding:2px 9px;background:var(--muted-bg);color:var(--ink-2)}
+.tag.t-reaproveita,.tag.t-usada{background:var(--ok-soft);color:var(--ok)}
+.tag.t-novatos,.tag.t-opcional{background:var(--blue-soft);color:var(--blue)}
+.tag.t-excl{background:var(--warn-soft);color:var(--warn)}
+.tag.serie{background:transparent;border:1px solid var(--rule);color:var(--ink)}
+.opts{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:.82rem;color:var(--ink-2)}
+.opts button{border:1px solid var(--rule);background:var(--surface);border-radius:99px;padding:3px 10px;cursor:pointer;font-size:.82rem}
+.opts button[aria-pressed="true"]{border-color:var(--blue);color:var(--blue);background:var(--blue-soft)}
+.links{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font-size:.86rem}
+.links a{text-decoration:none;white-space:nowrap}
+.links a:hover{text-decoration:underline}
+.links a.prin{background:var(--blue-soft);color:var(--blue);padding:4px 10px;border-radius:7px;font-weight:700}
+.links a.canal{background:var(--pencil-soft);color:var(--pencil-ink);padding:4px 10px;border-radius:7px;font-weight:700}
+.cupom{display:inline-flex;align-items:center;gap:6px;border:1.5px dashed var(--pencil);background:transparent;border-radius:7px;padding:3px 8px;cursor:pointer;font-size:.8rem;max-width:100%}
+.cupom code{font-family:ui-monospace,'Cascadia Mono',Consolas,monospace;font-size:.8rem;overflow-wrap:anywhere;user-select:all}
+.cupom .cp{color:var(--ink-2)}
+.controle{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding-top:2px}
+.sit{border:1px solid var(--rule);background:var(--surface);border-radius:7px;padding:4px 8px;font-size:.86rem}
+.preco-wrap{display:inline-flex;align-items:center;gap:4px;font-size:.86rem;color:var(--ink-2)}
+.preco{width:92px;border:1px solid var(--rule);background:var(--surface);border-radius:7px;padding:4px 8px;font-size:.86rem;font-variant-numeric:tabular-nums}
+.quem{font-size:.78rem;color:var(--ink-2)}
+.vazio{padding:18px;text-align:center;color:var(--ink-2);font-size:.92rem}
+
+.info{background:var(--muted-bg);border-radius:var(--r);padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.info h3{margin:0;font-size:.92rem}
+.info ul{margin:0;padding-left:18px;font-size:.88rem;color:var(--ink-2);display:flex;flex-direction:column;gap:3px}
+
+.cupons{display:flex;flex-direction:column;gap:10px}
+.cupons h2{margin:0;font-family:var(--f-display);font-weight:600;font-size:1.15rem}
+.cupons-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.cupom-card{background:var(--surface);border:1px solid var(--rule);border-radius:var(--r);padding:12px 14px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.cupom-card b{font-size:.95rem}
+.cupom-card .uso{font-size:.82rem;color:var(--ink-2)}
+.cupom-card a{font-size:.86rem;overflow-wrap:anywhere}
+
+.fonte{margin:0;font-size:.8rem;color:var(--ink-2);max-width:75ch;border-top:1px solid var(--rule);padding-top:12px}
+
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="pagina">
+  <header class="topo">
+    <p class="eyebrow">Colégio Logosófico · unidade Funcionários · listas de material</p>
+    <h1>Material escolar <span class="ano">2027</span></h1>
+    <p class="sync" id="sync" data-modo="carregando"><span class="dot"></span><span id="sync-txt">Carregando as marcações…</span></p>
+    <p class="aviso" id="aviso" hidden></p>
+  </header>
+
+  <section class="resumo" id="resumo" aria-label="Resumo do que já foi resolvido"></section>
+
+  <div class="abas-wrap">
+    <div class="abas" role="tablist" id="abas"></div>
+  </div>
+
+  <div class="filtros">
+    <button type="button" class="chip" data-act="filtro" data-f="todos">Tudo</button>
+    <button type="button" class="chip" data-act="filtro" data-f="falta">Falta comprar</button>
+    <button type="button" class="chip" data-act="filtro" data-f="ok">Resolvidos</button>
+    <input type="search" id="busca" class="busca" placeholder="Buscar item (ex.: cola, argila)" aria-label="Buscar item">
+  </div>
+  <p class="dica"><b>Comparar preços</b> abre o Google Shopping com o item já pesquisado: a mesma oferta aparece em várias lojas e dá para ordenar pelo menor preço. O Zoom mostra o "a partir de R$" entre lojas. Livros são pesquisados pelo ISBN; confira também o site da editora com o cupom da escola.</p>
+
+  <main id="lista" aria-live="polite"></main>
+
+  <section class="cupons" aria-labelledby="cupons-t">
+    <h2 id="cupons-t">Cupons e sites indicados nas listas</h2>
+    <div class="cupons-grid" id="cupons"></div>
+  </section>
+
+  <p class="fonte">Fonte: listas de material 2027 do Colégio Logosófico González Pecotche, unidade Funcionários (Infantil 4 e 4º ano do Ensino Fundamental), em PDF. Os itens de “Para os dois” não estão listados como compra; saem das observações das listas (encapar livros e cadernos com plástico incolor, marcar o nome nas roupas e em cada objeto do estojo). Os links de preço abrem uma busca na hora: os valores mudam e não ficam gravados aqui. O que for digitado em “valor pago” fica salvo.</p>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------------- Catálogo (das listas em PDF) ---------------- */
+const SERIES = {
+  i4:   {nome:'Infantil 4', curto:'Infantil 4'},
+  a4:   {nome:'4º ano', curto:'4º ano'},
+  casa: {nome:'Para os dois', curto:'os dois'}
+};
+const CATS = [
+  ['estojo','Estojo e escrita'],
+  ['papel','Cadernos, pastas e papel'],
+  ['cola','Colas e fitas'],
+  ['arte','Arte e modelagem'],
+  ['livro','Livros e dicionário'],
+  ['outro','Roupa, garrafa, flauta e etiquetas']
+];
+const TAGS = {
+  reaproveita:'pode reaproveitar do ano anterior',
+  usada:'pode ser usada',
+  novatos:'só para aluno novato',
+  opcional:'opcional'
+};
+const CANAIS = {
+  moderna:{nome:'Moderna / Santillana', url:'https://escolas.boaviagemdistribuidora.com.br/', site:'escolas.boaviagemdistribuidora.com.br', cod:'logosoficofuncionarios2027', tipo:'Cupom', uso:'4º ano: Compartilha Português, Presente Ciências e Matemática.'},
+  edbrasil:{nome:'Editora do Brasil', url:'https://www.editoradobrasil.com.br/familia-inteligente-economiza/', site:'editoradobrasil.com.br/familia-inteligente-economiza', cod:'660Q730', tipo:'Código', uso:'4º ano: Akpalô Geografia. Loucoliques é da mesma editora; confira se o código vale para ele.'},
+  ftd:{nome:'FTD', url:'https://lumisfera.com.br/', site:'lumisfera.com.br', cod:'70005', tipo:'Código', uso:'4º ano: História, Sociedade & Cidadania.'},
+  cambridge:{nome:'Cambridge (inglês)', url:'https://escolas.domusbrasilis.com.br/', site:'escolas.domusbrasilis.com.br', cod:'COLEGIOLOGOSOFICOFUNCIONARIOS', tipo:'Cupom', uso:'Infantil 4: Ready, Set, Grow! 1. 4º ano: Guess What! 4 (os dois livros).'},
+  cruzadinhas:{nome:'Cruzadinhas Ortográficas', url:'https://www.cruzadinhasortograficas.com.br/', site:'cruzadinhasortograficas.com.br', cod:null, uso:'4º ano: Cruzadinhas, Livro 3 Azul. Site indicado na lista, sem cupom.'},
+  lire:{nome:'Editora Lire', url:'https://editoralire.com/', site:'editoralire.com', cod:null, uso:'4º ano: O grande passeio. Também à venda no Colégio.'}
+};
+const I = (s, sec, cat, id, n, qt, d, x) => Object.assign({s, sec, cat, id, n, qt, d}, x || {});
+const TES = [{l:'destro', q:'tesoura escolar sem ponta'},{l:'canhoto', q:'tesoura escolar sem ponta canhoto'}];
+
+const ITENS = [
+/* ---- Infantil 4 ---- */
+I('i4','Entrega do material','papel','i4-fichario','Fichário tipo arquivo, 4 aros grandes, A4','1 un.','Para o portfólio individual. Marcar com o nome da criança.',{q:'fichário arquivo 4 argolas A4'}),
+I('i4','Entrega do material','papel','i4-plasticos','Plásticos encorpados 0,15 mm, A4, 4 furos','100 un.','Entregar já colocados no fichário.',{q:'envelope plástico A4 4 furos 0,15mm 100 unidades'}),
+I('i4','Entrega do material','outro','i4-blusa','Blusa de malha branca de adulto, manga curta (P ou M)','1 un.','Hering ou similar, para os momentos de pintura. Marcar com o nome.',{q:'camiseta branca adulto manga curta básica', tags:['usada']}),
+I('i4','Entrega do material','estojo','i4-tesoura','Tesoura pequena sem ponta','1 un.','Com o nome gravado. Criança canhota leva tesoura para canhoto.',{opts:TES}),
+I('i4','Entrega do material','estojo','i4-lapis','Lápis preto nº 2 Jumbo','2 un.','',{q:'lápis grafite jumbo nº 2'}),
+I('i4','Entrega do material','estojo','i4-estojo-duplo','Estojo duplo com zíper','1 un.','Vai com lápis de cor, apontador e borracha numa parte e o giz de cera na outra.',{q:'estojo duplo zíper escolar'}),
+I('i4','Entrega do material','estojo','i4-estojo-plastico','Estojo de plástico com zíper','1 un.','Vai com as canetas hidrocor dentro.',{q:'estojo escolar plástico zíper'}),
+I('i4','Entrega do material','estojo','i4-hidrocor','Canetas hidrocor grossas, 12 cores','1 jogo','Marcar cada caneta com o nome.',{q:'caneta hidrocor ponta grossa 12 cores'}),
+I('i4','Entrega do material','estojo','i4-lapis-cor','Lápis de cor Jumbo triangular, 12 cores','1 caixa','Marcar cada lápis com o nome.',{q:'lápis de cor jumbo triangular 12 cores'}),
+I('i4','Entrega do material','estojo','i4-apontador','Apontador com depósito para lápis Jumbo','1 un.','Marcar com o nome.',{q:'apontador com depósito lápis jumbo'}),
+I('i4','Entrega do material','estojo','i4-borracha','Borracha','1 un.','Marcar com o nome.',{q:'borracha escolar macia'}),
+I('i4','Entrega do material','estojo','i4-giz','Giz de cera, 12 cores','1 caixa','Marcar com o nome.',{q:'giz de cera 12 cores'}),
+I('i4','Entrega do material','papel','i4-pasta-2cm','Pasta de polipropileno com elástico, cerca de 2 cm, sem alça','1 un.','Qualquer cor. Leva o caderno de dever de casa dentro da mochila; nome do lado de fora.',{q:'pasta polipropileno com elástico lombada 2cm'}),
+I('i4','Entrega do material','papel','i4-pasta-vermelha','Pasta de polipropileno ofício, fina, com elástico, vermelha','1 un.','Marcar com o nome.',{q:'pasta polipropileno ofício elástico vermelha'}),
+I('i4','Entrega do material','papel','i4-caderno-desenho','Caderno de desenho grande, capa dura, espiral, cerca de 96 folhas, sem folha de seda','1 un.','Encapar e pôr o nome. Fazer margem de 1 cm à esquerda, com lápis de cor, em todas as folhas, frente e verso. É usado sempre na horizontal.',{q:'caderno de desenho grande capa dura espiral 96 folhas sem seda'}),
+I('i4','Entrega do material','papel','i4-adesivos','Cartelas de adesivos com motivos infantis','4 cartelas','Animais, bonecas, corações, flores, motos, carrinhos ou estrelas. Sem personagens, emojis, letras ou números.',{q:'cartela adesivos infantis animais'}),
+I('i4','Entrega do material','cola','i4-cola-liquida','Cola líquida branca','1 un.','A lista diz 9 g, tamanho que não é comum; o provável é 90 g.',{q:'cola branca 90g'}),
+I('i4','Entrega do material','cola','i4-cola-bastao','Cola bastão 40 g','2 un.','',{q:'cola bastão 40g'}),
+I('i4','Entrega do material','arte','i4-massinha','Massinha de modelar, 12 bastões','2 caixas','',{q:'massinha de modelar 12 bastões'}),
+I('i4','Entrega do material','arte','i4-ceramica','Massa para modelar cerâmica fria, 250 g','1 un.','',{q:'massa cerâmica fria 250g'}),
+I('i4','Entrega do material','cola','i4-fita-transp','Fita adesiva transparente 45 mm × 45 m','1 rolo','',{q:'fita adesiva transparente 45mm x 45m'}),
+I('i4','Entrega do material','cola','i4-fita-crepe','Fita crepe 25 mm × 50 m','2 rolos','',{q:'fita crepe 25mm x 50m'}),
+I('i4','Entrega do material','cola','i4-fita-neon','Fita crepe neon 25 mm × 50 m','1 rolo','Qualquer cor.',{q:'fita crepe neon 25mm x 50m'}),
+I('i4','Entrega do material','arte','i4-gel','Gel sem álcool, incolor ou azul','1 pote','',{q:'gel fixador sem álcool pote incolor'}),
+I('i4','Entrega do material','arte','i4-aquarela','Aquarela em pastilha, 12 cores','1 estojo','',{q:'aquarela pastilha 12 cores'}),
+I('i4','Entrega do material','arte','i4-micangas','Miçangas de furo grande, 100 g, uma cor só','1 saco','Cor à sua escolha.',{q:'miçangas furo grande 100g'}),
+I('i4','Arte','arte','i4-tela','Tela para pintura 30 × 30 cm','1 un.','Marcar com o nome e a turma.',{q:'tela para pintura 30x30'}),
+I('i4','Arte','arte','i4-argila','Argila natural para modelar, 500 g','1 pacote','',{q:'argila para modelar 500g'}),
+I('i4','Arte','arte','i4-guache','Tinta guache 250 ml','1 pote','A cor depende do turno: manhã, amarela; tarde, verde.',{turno:[{t:'manha',l:'manhã · amarela',q:'tinta guache 250ml amarela'},{t:'tarde',l:'tarde · verde',q:'tinta guache 250ml verde'}]}),
+I('i4','Livro de inglês','livro','i4-ready',"Ready, Set, Grow! Level 1, Student's Book with Digital Pack (American English)",'1 un.','Hawys Morgan, Cambridge.',{isbn:'9781009799140', canal:'cambridge'}),
+I('i4','Trazer diariamente','outro','i4-garrafa','Garrafinha de água de material firme','1 un.','Marcar com o nome.',{q:'garrafa de água infantil escolar'}),
+I('i4','Trazer diariamente','outro','i4-uniforme','Muda de uniforme reserva','1 muda','Fica na mochila a semana toda. Nome e sobrenome bordados ou pintados com caneta para tecido.',{}),
+
+/* ---- 4º ano ---- */
+I('a4','Materiais individuais','papel','a4-bloco','Bloco pautado A4, 50 folhas, com espiral','1 un.','',{q:'bloco pautado A4 50 folhas espiral'}),
+I('a4','Materiais individuais','papel','a4-brochurao-lp-mat','Caderno brochurão pautado, 60 folhas: Português e Matemática','2 un.','Caderno de espiral não é aceito. A escola pede marca de folha mais grossa.',{q:'caderno brochurão 60 folhas'}),
+I('a4','Materiais individuais','papel','a4-brochurao-hist-geo','Caderno brochurão pautado, 60 folhas: História e Geografia','2 un.','Caderno de espiral não é aceito.',{q:'caderno brochurão 60 folhas', tags:['reaproveita']}),
+I('a4','Materiais individuais','papel','a4-pastas','Pasta A4 com 30 plásticos encorpados (0,15 mm)','2 un.','',{q:'pasta catálogo A4 30 envelopes 0,15mm'}),
+I('a4','Materiais individuais','papel','a4-adesivos','Cartelas de adesivos','3 cartelas','Sem personagens.',{q:'cartela de adesivos escolar'}),
+I('a4','Materiais individuais','estojo','a4-hidrocor','Estojo com 12 canetas hidrocor grossas','1 jogo','',{q:'caneta hidrocor ponta grossa 12 cores'}),
+I('a4','Materiais individuais','papel','a4-caderno-novato','Caderno pautado grande, capa dura, 60 folhas','1 un.','Os cadernos dos alunos veteranos são encaminhados à professora; veterano não precisa comprar.',{q:'caderno capa dura grande 60 folhas', tags:['novatos']}),
+I('a4','Língua Portuguesa','livro','a4-compartilha','Compartilha Português, 4º ano (2ª ed., 2025)','1 un.','Santillana.',{canal:'moderna', exclusivo:true}),
+I('a4','Língua Portuguesa','livro','a4-cruzadinhas','Cruzadinhas: Desafios Ortográficos, Livro 3 (Azul)','1 un.','Iêda Maria Brito, Luz e Brito, 2025 (Coleção Jogos de Aprender).',{isbn:'9786501489926', canal:'cruzadinhas'}),
+I('a4','Língua Portuguesa','livro','a4-dicionario','Minidicionário pelo Novo Acordo Ortográfico','1 un.','Escolher um: Ruth Rocha (Scipione), Houaiss (Objetiva) ou Dicionário Júnior, de Geraldo Mattos (FTD).',{tags:['reaproveita'], opts:[{l:'Ruth Rocha',q:'minidicionário Ruth Rocha Scipione'},{l:'Houaiss',q:'minidicionário Houaiss da língua portuguesa'},{l:'Júnior (FTD)',q:'dicionário júnior língua portuguesa Geraldo Mattos FTD'}]}),
+I('a4','Ciências','livro','a4-ciencias','Presente Ciências 4, Projeto Presente: Ciências da Natureza (6ª ed.)','1 un.','Lilian Bacich, Célia R. Carone e Edilson A. Pichiliani, Moderna.',{canal:'moderna', exclusivo:true}),
+I('a4','Matemática','livro','a4-matematica','Matemática, 4º ano (5ª ed.)','1 un.','Ênio Silveira e Cláudio Marques, Moderna.',{isbn:'9788516119812', canal:'moderna'}),
+I('a4','Literatura','livro','a4-loucoliques','Loucoliques da Língua Portuguesa','1 un.','César Obeid, Editora do Brasil.',{q:'Loucoliques da Língua Portuguesa César Obeid', canal:'edbrasil'}),
+I('a4','Literatura','livro','a4-vizinha','A vizinha antipática que sabia Matemática','1 un.','Eliana Martins, Melhoramentos.',{q:'A vizinha antipática que sabia matemática Eliana Martins'}),
+I('a4','Literatura','livro','a4-grande-passeio','O grande passeio','1 un.','Larissa Lanna, Editora Lire. Também à venda no Colégio e no Espaço do Conhecimento Transcendente.',{q:'O grande passeio Larissa Lanna', canal:'lire'}),
+I('a4','Geografia','livro','a4-akpalo','Akpalô Geografia, 4º ano (4ª ed.)','1 un.','Roseni Rudek e Lilian Sourient, Editora do Brasil.',{isbn:'9788510074339', canal:'edbrasil'}),
+I('a4','História','livro','a4-historia','História, Sociedade & Cidadania, 4º ano (3ª ed., 2022)','1 un.','Alfredo Boulos Júnior, FTD. O Caderno de Atividades vem junto e também será usado.',{isbn:'9788596033503', canal:'ftd'}),
+I('a4','Inglês','livro','a4-gw-pupil',"Guess What! 4, Pupil's Book with eBook (Updated, British English)",'1 un.','Cambridge. Comprar novo e em volume único, não o dividido em A e B.',{isbn:'9781009798303', canal:'cambridge'}),
+I('a4','Inglês','livro','a4-gw-activity','Guess What! 4, Activity Book with Digital Pack (Updated, British English)','1 un.','Cambridge. Comprar novo e em volume único, não o dividido em A e B.',{isbn:'9781009798341', canal:'cambridge'}),
+I('a4','Música','outro','a4-flauta','Flauta doce soprano, barroca ou germânica','1 un.','Marcar com o nome e a turma.',{q:'flauta doce soprano barroca'}),
+I('a4','Artes','arte','a4-tela','Tela para pintura 30 × 40 cm','1 un.','Marcar com o nome e a turma.',{q:'tela para pintura 30x40'}),
+I('a4','Artes','papel','a4-caderno-desenho','Caderno de desenho capa dura','1 un.','Marcar com o nome e a turma.',{q:'caderno de desenho capa dura', tags:['reaproveita']}),
+I('a4','Artes','arte','a4-acrilica','Tinta acrílica fosca (nature), 60 ml','1 pote','A cor depende do turno: manhã, azul-escuro; tarde, azul-claro.',{turno:[{t:'manha',l:'manhã · azul-escuro',q:'tinta acrílica fosca 60ml azul escuro'},{t:'tarde',l:'tarde · azul-claro',q:'tinta acrílica fosca 60ml azul claro'}]}),
+I('a4','Artes','arte','a4-pincel','Pincel chato nº 12, cabo vermelho','1 un.','',{q:'pincel chato nº 12 cabo vermelho'}),
+I('a4','Artes','arte','a4-argila','Argila para modelar, 500 g','1 pacote','',{q:'argila para modelar 500g'}),
+I('a4','Artes','cola','a4-cola-branca','Cola branca','1 un.','',{q:'cola branca escolar 90g'}),
+I('a4','Uso diário (estojo e mochila)','estojo','a4-estojo','Estojo escolar ou bolsinha com zíper','1 un.','',{q:'estojo escolar zíper'}),
+I('a4','Uso diário (estojo e mochila)','estojo','a4-apontador','Apontador com depósito','1 un.','',{q:'apontador com depósito'}),
+I('a4','Uso diário (estojo e mochila)','estojo','a4-regua','Régua transparente resistente','1 un.','30 cm para guardar na mochila ou 15 cm para o estojo.',{opts:[{l:'30 cm',q:'régua transparente 30cm'},{l:'15 cm',q:'régua transparente 15cm'}]}),
+I('a4','Uso diário (estojo e mochila)','estojo','a4-lapis-cor','Lápis de cor grande, 24 cores','1 caixa','',{q:'lápis de cor grande 24 cores'}),
+I('a4','Uso diário (estojo e mochila)','estojo','a4-lapis','Lápis preto nº 2','4 un.','Lapiseira não é permitida.',{q:'lápis grafite nº 2'}),
+I('a4','Uso diário (estojo e mochila)','estojo','a4-borracha','Borracha macia','2 un.','',{q:'borracha macia escolar'}),
+I('a4','Uso diário (estojo e mochila)','estojo','a4-marca-texto','Caneta marca-texto','1 un.','Qualquer cor.',{q:'caneta marca-texto'}),
+I('a4','Uso diário (estojo e mochila)','cola','a4-cola-bastao','Cola em bastão','1 un.','',{q:'cola bastão'}),
+I('a4','Uso diário (estojo e mochila)','estojo','a4-tesoura','Tesoura pequena sem ponta','1 un.','Com o nome gravado.',{opts:TES}),
+I('a4','Uso diário (estojo e mochila)','outro','a4-squeeze','Garrafa squeeze para água','1 un.','',{q:'garrafa squeeze escolar'}),
+
+/* ---- Para os dois (deduzido das observações) ---- */
+I('casa','Para os dois','papel','casa-encapar','Plástico incolor transparente para encapar','1 rolo','4º ano: todos os livros e cadernos. Infantil 4: o caderno de desenho.',{q:'plástico para encapar livros incolor rolo'}),
+I('casa','Para os dois','outro','casa-caneta-tecido','Caneta para marcar tecido','1 un.','As duas listas pedem nome e um sobrenome por extenso nas roupas, bordados ou pintados com caneta própria.',{q:'caneta para tecido permanente preta'}),
+I('casa','Para os dois','outro','casa-etiquetas','Etiquetas com o nome','1 kit','As listas pedem o nome em cada objeto do estojo. Dá para escrever à mão.',{q:'etiquetas escolares personalizadas nome', tags:['opcional']})
+];
+
+const NAO_COMPRAR = {
+  i4:['Agenda escolar: a escola entrega no início do ano letivo.',
+      'Mochila de rodinha do Colégio: entregue no início das aulas; o valor vem no boleto.',
+      'Livros de literatura e brinquedos: R$ 130,00 cobrados no boleto.'],
+  a4:['Apostilas de Língua Portuguesa e Matemática (uma por etapa letiva), de Literatura e de História: compradas no Colégio em 2027, com o valor nos boletos de mensalidade.',
+      'Agenda oficial do Colégio: entregue na primeira semana de aula.']
+};
+
+/* ---------------- Links de busca ---------------- */
+const enc = encodeURIComponent;
+const semAcento = s => s.normalize('NFD').replace(/[̀-ͯ]/g,'');
+const slug = q => semAcento(q).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+const G   = q => 'https://www.google.com/search?udm=28&hl=pt-BR&gl=br&q=' + enc(q);
+const ZOOM= q => 'https://www.zoom.com.br/search?q=' + enc(q);
+const ML  = q => 'https://lista.mercadolivre.com.br/' + slug(q);
+const AMZ = q => 'https://www.amazon.com.br/s?k=' + enc(q);
+
+/* ---------------- Estado ---------------- */
+const LS_DADOS = 'material-escolar-2027:dados', LS_UI = 'material-escolar-2027:ui';
+const lsGet = k => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch(e){ return null; } };
+const lsSet = (k,v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} };
+
+const S = { st:{}, turnos:{}, modo:'carregando', carregado:false, confirmado:false, leitura:false, aviso:'', db:null, user:null, myId:null, renderPendente:false };
+const uiSalva = lsGet(LS_UI) || {};
+const UI = { aba: ['i4','a4','tudo'].includes(uiSalva.aba) ? uiSalva.aba : 'i4', filtro: ['todos','falta','ok'].includes(uiSalva.filtro) ? uiSalva.filtro : 'todos', busca:'', opt:{} };
+const salvarUI = () => lsSet(LS_UI, {aba:UI.aba, filtro:UI.filtro});
+
+const LABEL = {falta:'Falta comprar', comprado:'Comprado', temos:'Já temos', naoprecisa:'Não precisa'};
+const status = id => (S.st[id] && LABEL[S.st[id].status]) ? S.st[id].status : 'falta';
+const BRL = new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'});
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtNum = n => (typeof n === 'number' && isFinite(n)) ? n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}) : '';
+function parsePreco(v){
+  let t = String(v || '').replace(/R\$|\s/g,'');
+  if (!t) return null;
+  if (t.includes(',')) t = t.replace(/\./g,'').replace(',', '.');
+  const n = parseFloat(t);
+  return (isFinite(n) && n >= 0) ? Math.round(n*100)/100 : null;
+}
+
+function contagem(lista){
+  let tot=0, ok=0, gasto=0;
+  for (const it of lista){
+    const s = status(it.id);
+    const p = S.st[it.id] && S.st[it.id].preco;
+    if (s === 'comprado' && typeof p === 'number') gasto += p;
+    if (s === 'naoprecisa') continue;
+    tot++; if (s === 'comprado' || s === 'temos') ok++;
+  }
+  return {tot, ok, gasto};
+}
+
+/* ---------------- Render ---------------- */
+const $ = id => document.getElementById(id);
+const CHECK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.2 4.2L19 7" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const DASH = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 12h10" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>';
+
+function renderSync(){
+  const el = $('sync'), tx = $('sync-txt');
+  el.dataset.modo = S.modo;
+  tx.textContent = S.modo === 'db' ? (S.leitura ? 'Lista compartilhada (só leitura nesta conta)' : 'Compartilhado: o que um marca, o outro vê')
+                 : S.modo === 'local' ? 'Salvando só neste navegador. Abra pelo link do claude.ai, com login, para compartilhar.'
+                 : 'Carregando as marcações…';
+  const av = $('aviso'); av.textContent = S.aviso; av.hidden = !S.aviso;
+}
+
+function renderResumo(){
+  const cards = [
+    ['Infantil 4', contagem(ITENS.filter(i=>i.s==='i4'))],
+    ['4º ano', contagem(ITENS.filter(i=>i.s==='a4'))],
+    ['Total, com “Para os dois”', contagem(ITENS)]
+  ];
+  $('resumo').innerHTML = cards.map(([rot,c]) => {
+    const pct = c.tot ? Math.round(100*c.ok/c.tot) : 0;
+    return `<div class="card"><span class="rot">${esc(rot)}</span>
+      <span class="num">${c.ok}<small> de ${c.tot}</small></span>
+      <div class="barra" role="progressbar" aria-valuemin="0" aria-valuemax="${c.tot}" aria-valuenow="${c.ok}" aria-label="${esc(rot)}: ${c.ok} de ${c.tot} resolvidos"><i style="width:${pct}%"></i></div>
+      <span class="gasto">${c.tot - c.ok} faltando · ${BRL.format(c.gasto)} gastos</span></div>`;
+  }).join('');
+}
+
+function renderAbas(){
+  const abas = [['i4','Infantil 4'],['a4','4º ano'],['tudo','Tudo junto']];
+  $('abas').innerHTML = abas.map(([k,l]) => {
+    const lista = k === 'tudo' ? ITENS : ITENS.filter(i => i.s === k);
+    const c = contagem(lista);
+    return `<button type="button" role="tab" id="aba-${k}" aria-selected="${UI.aba===k}" data-act="aba" data-aba="${k}">${l}<span class="n">${c.ok}/${c.tot}</span></button>`;
+  }).join('');
+  document.querySelectorAll('.chip[data-f]').forEach(b => b.setAttribute('aria-pressed', String(UI.filtro === b.dataset.f)));
+}
+
+function passaFiltro(it){
+  const s = status(it.id);
+  if (UI.filtro === 'falta' && s !== 'falta') return false;
+  if (UI.filtro === 'ok' && s === 'falta') return false;
+  if (UI.busca){
+    const alvo = semAcento((it.n + ' ' + it.d + ' ' + it.sec).toLowerCase());
+    if (!alvo.includes(semAcento(UI.busca.toLowerCase()))) return false;
+  }
+  return true;
+}
+
+function optsDo(it){
+  const lista = it.opts || it.turno;
+  if (!lista) return null;
+  let sel = 0;
+  if (it.turno){ const k = it.turno.findIndex(o => o.t === S.turnos[it.s]); if (k >= 0) sel = k; }
+  if (UI.opt[it.id] != null && UI.opt[it.id] < lista.length) sel = UI.opt[it.id];
+  return {lista, sel};
+}
+
+function lk(rot, href, cls){ return `<a class="${cls||''}" href="${esc(href)}" target="_blank" rel="noopener">${esc(rot)} ↗</a>`; }
+
+function itemHTML(it, comSerie){
+  const st = status(it.id), reg = S.st[it.id] || {};
+  const bloq = (!S.carregado || S.leitura) ? 'disabled' : '';
+  const tags = [];
+  if (comSerie) tags.push(`<span class="tag serie">${esc(SERIES[it.s].curto)}</span>`);
+  (it.tags || []).forEach(t => tags.push(`<span class="tag t-${t}">${esc(TAGS[t])}</span>`));
+  if (it.exclusivo) tags.push('<span class="tag t-excl">venda exclusiva da editora</span>');
+
+  const o = optsDo(it);
+  let optsHTML = '';
+  if (o){
+    optsHTML = `<div class="opts" role="group" aria-label="Variação usada na busca"><span>${it.turno ? 'Turno:' : 'Buscar:'}</span>` +
+      o.lista.map((x,i) => `<button type="button" data-act="opt" data-i="${i}" aria-pressed="${i===o.sel}">${esc(x.l)}</button>`).join('') + '</div>';
+  }
+  const q = o ? o.lista[o.sel].q : it.q;
+
+  let links = '';
+  if (it.canal){
+    const c = CANAIS[it.canal];
+    links += lk(c.cod ? 'Site com desconto' : 'Site indicado', c.url, 'canal');
+    if (c.cod) links += `<button type="button" class="cupom" data-act="cupom" data-cod="${esc(c.cod)}" title="Copiar ${esc(c.tipo.toLowerCase())}"><code>${esc(c.cod)}</code><span class="cp">copiar</span></button>`;
+  }
+  if (it.isbn){
+    links += lk('Comparar preços', G(it.isbn), 'prin') + lk('Amazon', AMZ(it.isbn)) + lk('Mercado Livre', ML(it.isbn));
+  } else if (q && !it.exclusivo){
+    links += lk('Comparar preços', G(q), 'prin') + lk('Zoom', ZOOM(q)) + lk('Mercado Livre', ML(q)) + lk('Amazon', AMZ(q));
+  }
+  if (it.isbn) tags.push(`<span class="tag">ISBN ${esc(it.isbn)}</span>`);
+
+  let quem = '';
+  if (st !== 'falta' && reg.em){
+    const d = new Date(reg.em);
+    const data = isNaN(d) ? '' : d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+    quem = `<span class="quem"${reg.por ? ` data-uid="${esc(reg.por)}"` : ''}>${esc(LABEL[st])}${data ? ' em ' + data : ''}<span class="nm"></span></span>`;
+  }
+
+  const opcoes = Object.keys(LABEL).map(k => `<option value="${k}"${k===st?' selected':''}>${LABEL[k]}</option>`).join('');
+  const marcaIcone = st === 'naoprecisa' ? DASH : CHECK;
+  const ariaChk = st === 'falta' ? `Marcar como comprado: ${it.n}` : `Voltar para “falta comprar”: ${it.n}`;
+
+  return `<li class="item" data-id="${esc(it.id)}" data-st="${st}">
+    <div class="col-chk"><button type="button" class="chk" data-act="chk" aria-pressed="${st!=='falta'}" aria-label="${esc(ariaChk)}" ${bloq}>${marcaIcone}</button></div>
+    <div class="corpo">
+      <div class="l1"><span class="nome">${esc(it.n)}</span><span class="qt">${esc(it.qt)}</span></div>
+      ${it.d ? `<p class="det">${esc(it.d)}</p>` : ''}
+      ${tags.length ? `<div class="tags">${tags.join('')}</div>` : ''}
+      ${optsHTML}
+      ${links ? `<div class="links">${links}</div>` : ''}
+      <div class="controle">
+        <select id="sit-${esc(it.id)}" class="sit" aria-label="Situação de ${esc(it.n)}" ${bloq}>${opcoes}</select>
+        <label class="preco-wrap" ${st==='comprado' ? '' : 'hidden'}>R$ <input id="preco-${esc(it.id)}" class="preco" inputmode="decimal" autocomplete="off" placeholder="valor pago" value="${esc(fmtNum(reg.preco))}" aria-label="Valor pago por ${esc(it.n)}" ${bloq}></label>
+        ${quem}
+      </div>
+    </div>
+  </li>`;
+}
+
+function grupoHTML(titulo, itens, comSerie, nota){
+  const c = contagem(itens);
+  const vis = itens.filter(passaFiltro);
+  if (!vis.length) return '';
+  return `<section class="grupo"><h2>${esc(titulo)} <span class="cnt">${c.ok}/${c.tot}</span></h2>
+    ${nota ? `<p class="nota">${esc(nota)}</p>` : ''}
+    <ul class="itens">${vis.map(it => itemHTML(it, comSerie)).join('')}</ul></section>`;
+}
+
+function turnoHTML(s){
+  const t = S.turnos[s];
+  const bloq = (!S.carregado || S.leitura) ? 'disabled' : '';
+  const nome = SERIES[s].nome;
+  return `<div class="turno-bar"><span>Turno do ${esc(nome)} (define a cor da tinta):</span>
+    <span class="seg" role="group" aria-label="Turno do ${esc(nome)}">
+      <button type="button" data-act="turno" data-s="${s}" data-t="manha" aria-pressed="${t==='manha'}" ${bloq}>Manhã</button>
+      <button type="button" data-act="turno" data-s="${s}" data-t="tarde" aria-pressed="${t==='tarde'}" ${bloq}>Tarde</button>
+    </span></div>`;
+}
+
+function renderLista(){
+  let html = '';
+  if (UI.aba === 'tudo'){
+    for (const [k, nome] of CATS){
+      const its = ITENS.filter(i => i.cat === k).sort((a,b) => a.n.localeCompare(b.n,'pt-BR'));
+      html += grupoHTML(nome, its, true);
+    }
+  } else {
+    const s = UI.aba;
+    html += turnoHTML(s);
+    const secs = [];
+    ITENS.filter(i => i.s === s).forEach(i => { if (!secs.includes(i.sec)) secs.push(i.sec); });
+    for (const sec of secs) html += grupoHTML(sec, ITENS.filter(i => i.s === s && i.sec === sec), false);
+    html += grupoHTML('Para os dois', ITENS.filter(i => i.s === 'casa'), false, 'Não está na lista como compra; sai das observações das duas listas. Aparece nas duas abas e a marcação é a mesma.');
+    html += `<aside class="info"><h3>Não precisa comprar</h3><ul>${NAO_COMPRAR[s].map(x => `<li>${esc(x)}</li>`).join('')}</ul></aside>`;
+  }
+  if (!/class="item"/.test(html)){
+    const msg = UI.busca ? 'Nenhum item com esse nome nesta aba.' : (UI.filtro === 'falta' ? 'Nada faltando nesta aba.' : 'Nenhum item marcado ainda nesta aba.');
+    html = (UI.aba === 'tudo' ? '' : turnoHTML(UI.aba)) + `<div class="vazio">${msg}</div>` + (UI.aba === 'tudo' ? '' : `<aside class="info"><h3>Não precisa comprar</h3><ul>${NAO_COMPRAR[UI.aba].map(x => `<li>${esc(x)}</li>`).join('')}</ul></aside>`);
+  }
+  $('lista').innerHTML = `<div style="display:flex;flex-direction:column;gap:16px">${html}</div>`;
+  preencherQuem();
+}
+
+function renderCupons(){
+  $('cupons').innerHTML = Object.values(CANAIS).map(c => `<div class="cupom-card">
+    <b>${esc(c.nome)}</b>
+    <a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.site)} ↗</a>
+    ${c.cod ? `<span><button type="button" class="cupom" data-act="cupom" data-cod="${esc(c.cod)}" title="Copiar ${esc(c.tipo.toLowerCase())}"><code>${esc(c.cod)}</code><span class="cp">copiar</span></button></span>` : ''}
+    <span class="uso">${esc(c.uso)}</span></div>`).join('');
+}
+
+function render(){
+  const ativo = document.activeElement;
+  if (ativo && ativo.classList && ativo.classList.contains('preco')){ S.renderPendente = true; return; }
+  S.renderPendente = false;
+  renderSync(); renderResumo(); renderAbas(); renderLista();
+}
+
+async function preencherQuem(){
+  if (!S.user) return;
+  const els = Array.from(document.querySelectorAll('.quem[data-uid]'));
+  const ids = Array.from(new Set(els.map(e => e.dataset.uid)));
+  if (!ids.length) return;
+  let ps = {};
+  try { ps = await S.user.profiles(ids); } catch(e){ return; }
+  els.forEach(e => {
+    const p = ps[e.dataset.uid]; const alvo = e.querySelector('.nm');
+    if (!p || !alvo) return;
+    const nm = p.isMe ? 'você' : (p.name || '');
+    alvo.textContent = nm ? ' por ' + nm : '';
+  });
+}
+
+/* ---------------- Gravação ---------------- */
+const filas = {};
+function persistir(path, body){
+  if (S.modo === 'local'){ lsSet(LS_DADOS, {st:S.st, turnos:S.turnos}); return; }
+  if (S.modo !== 'db' || !S.db) return;
+  const ant = filas[path] || Promise.resolve();
+  filas[path] = ant.then(() => tentar(() => S.db.doc(path).set(body)));
+}
+async function tentar(fn){
+  try { await fn(); }
+  catch(e){
+    let erro = e;
+    if (e && e.code === 'unavailable'){
+      await new Promise(r => setTimeout(r, 700 + Math.random()*1200));
+      try { await fn(); return; } catch(e2){ erro = e2; }
+    }
+    const c = erro && erro.code;
+    if (c === 'invalid_argument' || c === 'not_granted'){ S.leitura = true; S.aviso = 'Esta conta pode ver a lista, mas não marcar. Quem é dono da página precisa dar acesso de Colaborador.'; }
+    else if (c === 'revoked'){ S.leitura = true; S.aviso = 'O acesso a esta página mudou. Recarregue para continuar.'; }
+    else if (c === 'quota_exceeded'){ S.aviso = 'O armazenamento da página está cheio; a última marcação não foi salva.'; }
+    else { S.aviso = 'A última marcação não foi salva. Tente de novo em instantes.'; }
+    render();
+  }
+}
+function salvar(id, patch){
+  if (S.leitura || !S.carregado) return;
+  const ant = S.st[id] || {};
+  const novo = { status: ant.status || 'falta', preco: (typeof ant.preco === 'number') ? ant.preco : null };
+  Object.assign(novo, patch, { por: S.myId || null, em: new Date().toISOString() });
+  S.st = Object.assign({}, S.st, {[id]: novo});
+  persistir('itens/' + id, novo);
+  render();
+}
+function definirTurno(s, t){
+  if (S.leitura || !S.carregado) return;
+  const novo = Object.assign({}, S.turnos);
+  novo[s] = (novo[s] === t) ? null : t;
+  S.turnos = novo;
+  ITENS.forEach(i => { if (i.s === s && i.turno) delete UI.opt[i.id]; });
+  persistir('config/turnos', novo);
+  render();
+}
+
+/* ---------------- Eventos ---------------- */
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const act = b.dataset.act;
+  const li = b.closest('.item'); const id = li && li.dataset.id;
+  if (act === 'aba'){ UI.aba = b.dataset.aba; salvarUI(); render(); }
+  else if (act === 'filtro'){ UI.filtro = b.dataset.f; salvarUI(); render(); }
+  else if (act === 'chk' && id){ salvar(id, {status: status(id) === 'falta' ? 'comprado' : 'falta'}); }
+  else if (act === 'opt' && id){ UI.opt[id] = Number(b.dataset.i); render(); }
+  else if (act === 'turno'){ definirTurno(b.dataset.s, b.dataset.t); }
+  else if (act === 'cupom'){
+    const cod = b.dataset.cod, cp = b.querySelector('.cp');
+    const ok = () => { cp.textContent = 'copiado'; setTimeout(() => { cp.textContent = 'copiar'; }, 1600); };
+    const falha = () => { const r = document.createRange(); r.selectNodeContents(b.querySelector('code')); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); cp.textContent = 'selecionado: Ctrl+C'; };
+    try { navigator.clipboard.writeText(cod).then(ok, falha); } catch(err){ falha(); }
+  }
+});
+document.addEventListener('change', e => {
+  const t = e.target; const li = t.closest && t.closest('.item'); if (!li) return;
+  const id = li.dataset.id;
+  if (t.classList.contains('sit')) salvar(id, {status: t.value});
+  else if (t.classList.contains('preco')) salvar(id, {preco: parsePreco(t.value)});
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.classList && e.target.classList.contains('preco')) e.target.blur();
+});
+document.addEventListener('focusout', e => {
+  if (e.target.classList && e.target.classList.contains('preco')) setTimeout(() => { if (S.renderPendente) render(); }, 0);
+});
+$('busca').addEventListener('input', e => { UI.busca = e.target.value.trim(); render(); });
+
+/* ---------------- Início ---------------- */
+function modoLocal(){
+  S.modo = 'local';
+  const d = lsGet(LS_DADOS) || {};
+  S.st = d.st || {}; S.turnos = d.turnos || {};
+  S.carregado = true; render();
+}
+async function iniciar(){
+  renderCupons(); render();
+  const C = window.claude;
+  if (!C || typeof C.use !== 'function'){ modoLocal(); return; }
+  let db = null, user = null;
+  try { [db, user] = await Promise.all([C.use('db'), C.use('user')]); } catch(e){}
+  S.user = user || null;
+  if (user){
+    try { S.myId = await user.id(); } catch(e){}
+    try { if (await user.can('data.write') === false){ S.leitura = true; } } catch(e){}
+  }
+  if (!db){ modoLocal(); return; }
+  S.db = db; S.modo = 'db'; render();
+  const timer = setTimeout(() => { if (!S.confirmado){ S.aviso = 'As marcações compartilhadas ainda não chegaram. Confira a conexão; a lista continua visível.'; render(); } }, 10000);
+  db.collection('itens').onSnapshot(snap => {
+    const st = {};
+    snap.docs.forEach(d => { if (d.exists) st[d.id] = d.data(); });
+    S.st = st; S.carregado = true;
+    if (!snap.metadata.fromCache && !S.confirmado){ S.confirmado = true; clearTimeout(timer); if (S.aviso.startsWith('As marcações compartilhadas')) S.aviso = ''; }
+    render();
+  }, err => {
+    clearTimeout(timer); S.carregado = true; S.confirmado = true;
+    S.aviso = (err && err.code === 'revoked') ? 'O acesso a esta página mudou. Recarregue para continuar.' : 'Não deu para ler as marcações compartilhadas agora. Recarregue a página em instantes.';
+    S.leitura = true; render();
+  });
+  db.doc('config/turnos').onSnapshot(d => {
+    S.turnos = d.exists ? Object.assign({}, d.data()) : {}; render();
+  }, () => {});
+}
+iniciar();
+})();
+</script>
+</body>
+</html>
